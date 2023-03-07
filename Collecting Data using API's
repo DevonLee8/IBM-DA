@@ -1,0 +1,60 @@
+import requests
+import pandas as pd
+import json
+
+# GOAL1: Create function to find number of jobs using Python language
+
+# Get the JSON URL
+json_url = "https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-DA0321EN-SkillsNetwork/labs/module%201/Accessing%20Data%20Using%20APIs/jobs.json"
+r = requests.get(json_url)
+# Create a function to filter through JSON file
+def get_number_of_jobs_T(technology):
+    number_of_jobs = 0
+    if r.ok:
+        # Create JSON data object and iterate through list
+        data = r.json()
+        for job in data:
+            # Parse 'Key Skills' to find technology and count
+            key_skills = job.get('Key Skills')
+            if technology in key_skills:
+                number_of_jobs = number_of_jobs + 1
+    return technology,number_of_jobs
+get_number_of_jobs_T("Python")
+
+
+# GOAL2: Create a function to find the number of jobs based on location
+
+def get_number_of_jobs_L(location):
+    number_of_jobs = 0
+    if r.ok:
+        data = r.json()
+        for job in data:
+            # Create locations object and count locations
+            locations = job.get('Location')
+            if locations == location:
+                number_of_jobs = number_of_jobs + 1
+    return location,number_of_jobs
+
+
+# GOAL3: Store the results in an excel file for locations
+
+from openpyxl import Workbook
+wb=Workbook()
+ws=wb.active
+cities = ["Los Angeles","San Francisco","New York","Washington DC","Seattle","Austin","Detroit"] # Create list of cities to iterate
+ws.append(['City','Number of Jobs']) # Create headers
+# Iterate function through list of cities and save to excel file
+for city in cities:
+    ws.append(list(get_number_of_jobs_L(city)))
+wb.save('job-postings.xlsx')
+
+
+# GOAL4: Store the results in an excel file for programming languages
+
+languages = ['C','C#','C++','Java','JavaScript','Python','Scala','Oracle','SQL Server','MySQL Server','PostgreSQL','MongoDB']
+wb1=Workbook()
+ws1=wb1.active
+ws1.append(['Language','Number of Jobs'])
+for language in languages:
+    ws1.append(list(get_number_of_jobs_T(language)))
+wb1.save('tech-jobs')
