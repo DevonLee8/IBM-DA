@@ -1,0 +1,32 @@
+#GOAL: Web Scrape HTML file and save to csv file
+
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+#this url contains the data you need to scrape
+url = "https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-DA0321EN-SkillsNetwork/labs/datasets/Programming_Languages.html"
+
+# Download the webpage to the URL
+html = requests.get(url).text
+
+# Create a soup object
+soup = BeautifulSoup(html,'html.parser')
+
+# Scrape the 'Language' name and 'Annual Average Salary'
+
+# Create an empty dataframe with headers
+language_salary_df = pd.DataFrame(columns=['Language','Annual Average Salary'])
+# Retrieve the table from HTML doc
+table = soup.table
+# Separate the header row from the value rows
+table_rows = table.find_all('tr')[1:]
+# Iterate through table rows
+for rows in table_rows:
+    row = rows.find_all('td')
+    lang = row[1].string
+    aas = row[3].string
+    language_salary_df = language_salary_df.append({'Language': lang,'Annual Average Salary': aas}, ignore_index=True)
+
+# Save scrapped data to a csv file
+language_salary_df.to_csv("popular-language.csv", index=False)
