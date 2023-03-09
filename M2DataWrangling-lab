@@ -1,0 +1,46 @@
+## Objectives:
+- Identify and remove duplicate values
+- Identify and impute missing values
+- Normalize data
+
+# Import required libraries
+import pandas as pd
+import numpy as np
+
+# Download CSV file into dataframe
+df = pd.read_csv("https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-DA0321EN-SkillsNetwork/LargeData/m1_survey_data.csv")
+
+# Find duplicate values 
+df.duplicated().value_counts()
+# Remove duplicate values
+df.drop_duplicates(inplace=True,ignore_index=True)
+
+# Find missing values
+missing_data = df.isnull()
+for column in missing_data.columns.values.tolist():
+    print(column,": ", missing_data[column].sum(), " missing values")
+# Find the number of missing values in the column 'WorkLoc' (we will only be imputing missing values for this column)
+missing_data['WorkLoc'].sum()
+# Find the value count, identify the value with the most frequency, and impute column with that value
+df['WorkLoc'].value_counts()
+wl_max = df['WorkLoc'].value_counts().idxmax()
+df['WorkLoc'].replace(np.nan, wl_max, inplace=True)
+
+# Normalize salary data; salary categories: Yearly, Monthly, Weekly. Place values in new column
+df['CompFreq'].value_counts()
+# Create empty list to place new values
+norm_ann = []
+# Iterate through data and compute annual salary
+for f,t in zip(df['CompFreq'],df['CompTotal']):
+    if f == "Weekly":
+        nac = t*52
+        norm_ann.append(nac)
+    elif f == "Monthly":
+        nac = t*12
+        norm_ann.append(nac)
+    else:
+        nac = t
+        norm_ann.append(nac)
+# Assign filled list to new column in data frame
+df['NormalizedAnnualCompensation'] = norm_ann
+df
