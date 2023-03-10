@@ -1,0 +1,60 @@
+## Objectives
+- Identify the distribution of data
+- Identify and remove the outliers
+- Identify correlation between features
+
+# Import required libraries
+import pandas as pd
+import numpy as np
+import seaborn as sns
+
+# Download CSV file to dataframe
+df = pd.read_csv("https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-DA0321EN-SkillsNetwork/LargeData/m2_survey_data.csv")
+
+# Plot distribution and histogram of the column 'ConvertedComp'
+ax = sns.distplot(df['ConvertedComp'],hist=False,color='r',label='Annual Salary Distribution')
+ax1 = sns.histplot(df['ConvertedComp'])
+
+# Find the median of the column 'ConvertedComp'
+df['ConvertedComp'].median()
+
+# Find the number of responders that identified as only a Man
+df['Gender'].value_counts()
+
+# Find the median 'ConvertedComp' of responders that identified as only a Woman
+df[df['Gender'] == "Woman"]['ConvertedComp'].median()
+
+# Give 5 number summary of the column 'Age'
+df['Age'].describe()
+
+# Plot of histogram of the column 'Age'
+ax2 = sns.histplot(df['Age'])
+
+# Find out if outliers exist in the column 'ConvertedComp' using a box plot
+ax3 = sns.boxplot(df['ConvertedComp'])
+
+# Find the Inter Quartile Range of the column 'ConvertedComp'
+IQR = df['ConvertedComp'].quantile(0.75)-df['ConvertedComp'].quantile(0.25)
+
+# Find the upper and lower bounds
+IQR = df['ConvertedComp'].quantile(0.75)-df['ConvertedComp'].quantile(0.25)
+lb = df['ConvertedComp'].quantile(0.25) - 1.5*IQR
+lb = max(0,lb)
+ub = df['ConvertedComp'].quantile(0.75) + 1.5*IQR
+print("Lower Bound: ",lb)
+print("Upper Bound: ",ub)
+
+# Identify how many outliers there are
+lower_out = len(df[df['ConvertedComp'] < lb])
+upper_out = len(df[df['ConvertedComp'] > ub])
+print(lower_out,upper_out)
+
+# Create a new dataframe by removing outliers from the column 'ConvertedComp'
+import numpy as np
+outlier_array = np.where(df['ConvertedComp'] > ub)
+df2 = df.drop(outlier_array[0],inplace=False)
+print(df.shape)
+print(df2.shape)
+
+# Find the correlation between 'Age' and all other columns
+df2.corr()
