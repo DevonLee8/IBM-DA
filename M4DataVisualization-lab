@@ -1,0 +1,195 @@
+### Objectives
+- Visualize the distrubition of data
+- Visualize the relationship between two features
+- Visualize composition of data
+- Visualize comparison of data
+
+# Download database file
+!wget https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBM-DA0321EN-SkillsNetwork/LargeData/m4_survey_data.sqlite
+
+# Connect to the database
+import sqlite3
+conn = sqlite3.connect("m4_survey_data.sqlite") # open a database connection
+
+# Import required libraries
+import pandas as pd
+import matplotlib as plt
+import numpy as np
+import seaborn as sns
+
+# How to run a SQL query
+# print how many rows are there in the table named 'master'
+QUERY = """
+SELECT COUNT(*)
+FROM master
+"""
+# the read_sql_query runs the sql query and returns the data as a dataframe
+df = pd.read_sql_query(QUERY,conn)
+df.head()
+
+# How to list all tables
+# print all the tables names in the database
+QUERY = """
+SELECT name as Table_Name FROM
+sqlite_master WHERE
+type = 'table'
+"""
+# the read_sql_query runs the sql query and returns the data as a dataframe
+pd.read_sql_query(QUERY,conn)
+
+# How to run a groupby query
+QUERY = """
+SELECT Age,COUNT(*) as count
+FROM master
+group by age
+order by age
+"""
+pd.read_sql_query(QUERY,conn)
+
+# How to describe a table
+table_name = 'master'  # the table you wish to describe
+QUERY = """
+SELECT sql FROM sqlite_master
+WHERE name= '{}'
+""".format(table_name)
+df = pd.read_sql_query(QUERY,conn)
+print(df.iat[0,0])
+
+# Plot a histogram of 'ConvertedComp'
+QUERY = """
+SELECT ConvertedComp FROM master
+"""
+df = pd.read_sql_query(QUERY,conn)
+bin_edges = np.linspace(df.min(),df.max(),6,dtype=int)
+bin_edges = bin_edges.tolist()
+df.plot(kind='hist',xticks = bin_edges)
+
+plt.title('Histogram of Converted Compensation')
+plt.ylabel('Number of People')
+plt.xlabel('Annual Compensation (millions)')
+
+# Plot a box plot of 'Age'
+QUERY = """
+SELECT Age from master
+"""
+df = pd.read_sql_query(QUERY,conn)
+df.plot(kind='box',color='red')
+
+plt.title('Box Plot of Age')
+plt.ylabel('Age')
+plt.xlabel('')
+
+# Create a scatter plot of 'Age' and 'WorkWeekHrs'
+QUERY = """
+SELECT Age, WorkWeekHrs from master
+"""
+df = pd.read_sql_query(QUERY,conn)
+df.plot(kind='scatter',
+       x='Age',
+       y='WorkWeekHrs')
+
+plt.title('Scatter Plot between Age and Work Week Hours')
+plt.ylabel('Work Week Hours')
+plt.xlabel('Age')
+
+# Create a bubble plot of 'WorkWeekHrs' and 'CodeRevHrs', use 'Age' as bubble size
+QUERY = """
+SELECT Age, WorkWeekHrs, CodeRevHrs from master
+"""
+df = pd.read_sql_query(QUERY,conn)
+ax0 = sns.scatterplot(data=df,
+                      x='WorkWeekHrs',
+                     y='CodeRevHrs',
+                     size='Age',
+                     hue='Age',
+                     sizes=(100,200))
+
+ax0.set_title('Number of Coded vs. Actual Hours by Age')
+
+# Create a pie chart of the top 5 databases that respondents wish to learn next year. Label the pie. chart with database names and display percentages
+# of each databae on the pie chart
+QUERY = """
+SELECT * from DatabaseDesireNextYear
+"""
+df=pd.read_sql_query(QUERY,conn)
+
+df_top_5 = df['DatabaseDesireNextYear'].value_counts().head(5)
+df_top_5 = df_top_5.to_frame()
+
+color_list = ['red','yellowgreen','blue','green','purple']
+df_top_5.plot(kind='pie',
+             autopct='%1.1f%%',
+             startangle=90,
+             shadow=True,
+             labels=None,
+             colors=color_list,
+             subplots=True)
+
+plt.title('Top 5 Desired Databases to Learn Next Year')
+plt.axis('equal')
+plt.legend(labels=df_top_5.index,loc='upper right')
+
+# What is Python ranked in languages respondents want to learn next year
+QUERY = """
+SELECT LanguageDesireNextYear from LanguageDesireNextYear
+"""
+df = pd.read_sql_query(QUERY,conn)
+df.value_counts()
+
+# How many respondents have only used 'MySQL'
+QUERY = """
+SELECT * from DatabaseWorkedWith
+ORDER BY Respondent
+"""
+df = pd.read_sql_query(QUERY,conn)
+df1 = df.groupby('Respondent').sum() # Adds all databases into one line (no spaces)
+df1[df1['DatabaseWorkedWith']=='MySQL'].count()
+
+# What is the position title that majority of respondents hold
+QUERY = """
+SELECT * from DevType
+"""
+df = pd.read_sql_query(QUERY,conn)
+df['DevType'].value_counts()
+
+# Create a stakced chart of median 'WorkWeekHrs' and 'CodeRevHrs' for the age group 30-35
+QUERY = """
+SELECT Age, WorkWeekHrs, CodeRevHrs from master
+WHERE Age BETWEEN 30 AND 35
+"""
+df = pd.read_sql_query(QUERY, conn)
+df_age = df.groupby('Age',axis=0).median()
+df_age.plot(kind='bar',
+           stacked=True,
+           color=['blue','green'])
+
+plt.title('Median Number of Hours Worked Based on Age')
+plt.ylabel('Number of Hours')
+plt.xlabel('Age')
+
+# Plot the median 'ConvertedComp' from ages 45-60
+QUERY = """
+SELECT Age, ConvertedComp from master
+"""
+df = pd.read_sql_query(QUERY,conn)
+df_cc = df.groupby('Age',axis=0).median()
+df_cc.plot(kind='line',
+          figsize=(20,10))
+
+plt.title('Median')
+plt.ylabel('Converted Annual Compensation')
+plt.xlabel('Age')
+
+# Create a horizontal bar chart using column 'MainBranch'
+QUERY = """
+SELECT MainBranch from master
+"""
+df = pd.read_sql_query(QUERY,conn)
+df_mainb = df.value_counts().to_frame()
+df_mainb.rename(columns={0:'Count'},inplace=True)
+df_mainb.sort_values(by='Count',ascending=True,inplace=True)
+
+df_mainb.plot(kind='barh')
+
+# Close the database connection
+conn.close()
