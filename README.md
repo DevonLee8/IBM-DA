@@ -1,5 +1,3 @@
 # IBM-DA
 
-## Editing the file
-
-It's markdown file in this repository
+## Projects from IBM Data Analyst Professional Certificate Courses
